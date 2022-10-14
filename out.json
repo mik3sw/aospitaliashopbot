@@ -1,0 +1,47 @@
+"{
+    'chat_instance': '-6342892619312748783', 
+    'data': 'delete', 
+    'message': {
+        'sender_chat': {
+            'id': -1001804385883, 
+            'username': 'aospitaliashop1', 
+            'title': 'Mercatino test', 
+            'type': 'channel'
+            }, 
+        'caption_entities': [
+            {'length': 6, 'type': 'hashtag', 'offset': 9}, 
+            {'length': 4, 'type': 'bold', 'offset': 19}, 
+            {'length': 1, 'type': 'italic', 'offset': 25}, 
+            {'length': 7, 'type': 'bold', 'offset': 31}, 
+            {'length': 9, 'type': 'bold', 'offset': 46}, 
+            {'length': 10, 'type': 'bold', 'offset': 63}, 
+            {'length': 8, 'type': 'bold', 'offset': 82}
+        ], 
+        'date': 1665747567, 
+        'reply_markup': {'inline_keyboard': [[{'callback_data': 'delete', 'text': 'Elimina'}]]}, 
+        'group_chat_created': False, 
+        'photo': [{'width': 90, 'file_unique_id': 'AQAD8LgxG9qpSFJ4', 'height': 67, 'file_size': 658, 'file_id': 'AgACAgQAAx0Ea4y-WwADBWNJSm_KC25O86ckoAS5TUtc7Y4_AALwuDEb2qlIUqA05PgGdcC4AQADAgADcwADKgQ'}, {'width': 320, 'file_unique_id': 'AQAD8LgxG9qpSFJy', 'height': 240, 'file_size': 4442, 'file_id': 'AgACAgQAAx0Ea4y-WwADBWNJSm_KC25O86ckoAS5TUtc7Y4_AALwuDEb2qlIUqA05PgGdcC4AQADAgADbQADKgQ'}, {'width': 800, 'file_unique_id': 'AQAD8LgxG9qpSFJ9', 'height': 600, 'file_size': 13324, 'file_id': 'AgACAgQAAx0Ea4y-WwADBWNJSm_KC25O86ckoAS5TUtc7Y4_AALwuDEb2qlIUqA05PgGdcC4AQADAgADeAADKgQ'}, {'width': 1280, 'file_unique_id': 'AQAD8LgxG9qpSFJ-', 'height': 960, 'file_size': 24440, 'file_id': 'AgACAgQAAx0Ea4y-WwADBWNJSm_KC25O86ckoAS5TUtc7Y4_AALwuDEb2qlIUqA05PgGdcC4AQADAgADeQADKgQ'}], 
+        'message_id': 5, 
+        'new_chat_photo': [], 
+        'new_chat_members': [], 
+        'caption': '38201859\n#vendo\n📦 Ciao\n\nT\n\n💰 Prezzo: 10€\n💳 Pagamenti: Ok\n🚚 Spedizione: Ok\n\n👤 Contatti: Ok', 
+        'chat': {
+            'id': -1001804385883, 
+            'username': 'aospitaliashop1', 
+            'title': 'Mercatino test', 
+            'type': 'channel'
+        },
+        'channel_chat_created': False, 
+        'delete_chat_photo': False, 
+        'supergroup_chat_created': False, 
+        'entities': []
+    }, 
+    'id': '164075737419710984', 
+    'from': {
+        'is_bot': False, 
+        'first_name': 'Mike', 
+        'id': 38201859, 
+        'language_code': 'it', 
+        'username': 'mike_2000'
+    }
+}"
