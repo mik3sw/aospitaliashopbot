@@ -70,7 +70,8 @@ def add_post(telegram_id):#, type, name, description, price, payments, shipment,
 
 def add_post_partial(tg_id, name, value, value_type="text"):
     if value_type == "text":
-        query = "UPDATE posts set {} = '{}' where telegram_id = {}".format(name, value, tg_id, )
+        value = value.replace("\"", "'")
+        query = "UPDATE posts set {} = \"{}\" where telegram_id = {}".format(name, value, tg_id, )
     else:
         query = "INSERT INTO posts ({}) VALUES ({})"
     con = sqlite3.connect("posts.db")

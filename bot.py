@@ -15,7 +15,7 @@ bot.
 
 import logging
 import time
-from sympy import E
+#from sympy import E
 
 from telegram import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
@@ -80,7 +80,7 @@ def newpost(update: Update, context: CallbackContext) -> int:
         pass
     #res = update.message.text
     #db.add_post_partial(update.message.from_user.id, "type", update.message.text)
-    update.message.reply_text("Benvenuto!\nCominciamo: dai un <b>titolo</b> al tuo annuncio 📦\n\n<i>Cerca di essere più esaustivo possibile, esempio: Google Pixel 6 nero tempesta 128GB</i>\n\n Puoi uscire dal processo in qualunque momento usando /cancel", reply_markup=ReplyKeyboardRemove(), parse_mode='HTML')
+    update.message.reply_text("Benvenuto!\nCominciamo: dai un <b>titolo</b> al tuo annuncio 📦\n\n<i>Cerca di essere più esaustivo possibile, esempio: Google Pixel 6 nero tempesta 128GB</i>\n\n Puoi uscire dal processo in qualunque momento usando /cancel\n\n<b>⚠️ Attenzione!</b>\nDurante tutto il processo <b>NON fare copia e incolla</b> da altre fonti. La presenza di caratteri speciali (a volte invisibili) fa annullare il processo.", reply_markup=ReplyKeyboardRemove(), parse_mode='HTML')
     return NAME
 
 def name(update: Update, context: CallbackContext) -> int:
@@ -118,8 +118,39 @@ def payments(update: Update, context: CallbackContext) -> int:
 
 def shipments(update: Update, context: CallbackContext) -> int:
     db.add_post_partial(update.message.from_user.id, "shipment", update.message.text)
-    update.message.reply_text("Aggiungi un contatto 👤\n\n<i>Può essere il tuo username telegram o il tuo numero di telefono/mail ecc...\nÈ possibile inserire più contatti, ricorda di scriverli in un unico messaggio</i>", reply_markup=ReplyKeyboardRemove(), parse_mode='HTML')
-    return CONTACTS
+    new = update.message.from_user
+    try:
+        if new.username == None:
+            name = "<a href=\"tg://user?id={}\">{}</a>".format(new.id, new.first_name)
+        else:
+            name = "@"+new.username
+    except:
+        name = "[ERROR]"
+    db.add_post_partial(update.message.from_user.id, "contacts", name)
+
+    #update.message.reply_text("Aggiungi un contatto 👤\n\n<i>Può essere il tuo username telegram o il tuo numero di telefono/mail ecc...\nÈ possibile inserire più contatti, ricorda di scriverli in un unico messaggio</i>", reply_markup=ReplyKeyboardRemove(), parse_mode='HTML')
+    info = db.getpost(update.message.from_user.id)
+    text1 = f"""
+<code>{info['tg_id']}</code>
+#vendo
+📦 <b>{info['name']}</b>
+
+<i>{info['description']}</i>
+
+💰 <b>Prezzo:</b> {info['price']}€
+💳 <b>Pagamenti</b>: {info['payments']}
+🚚 <b>Spedizione</b>: {info['shipment']}
+
+👤 <b>Contatti</b>: {info['contacts']}"""
+
+    update.message.reply_text(f"<b>Congratulazioni!</b> 🎉 \nIl tuo annuncio è stato postato correttamente nel canale @aospitaliashop.\n\nRicorda che una volta venduto l'articolo o se vuoi semplicemente cancellare o rifare l'annuncio è presente un bottone 'Elimina' che puoi usare solo tu.\nPer cercare i tuoi annunci all'interno del canale usa la funzione di ricerca di Telegram e inserisci come campo il tuo user_id: <code>{update.message.from_user.id}</code>\n\nGrazie.", reply_markup=ReplyKeyboardRemove(), parse_mode='HTML')
+    keyboard = [[InlineKeyboardButton("Elimina", callback_data='delete')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    context.bot.send_photo(MARKET, open(f"images/{update.message.from_user.id}.jpg", "rb"), caption=text1, reply_markup=reply_markup, parse_mode='HTML')
+    #38201859
+    return ConversationHandler.END
+
+    #return CONTACTS
 
 
 def contacts(update: Update, context: CallbackContext) -> int:
@@ -199,6 +230,14 @@ def whitelist(update, context):
 def start(update, context):
     update.message.reply_text(f"Benvenuto! Usa il comando /newpost per postare un nuovo annuncio.")
 
+def demo(update, context):
+    if update.message.from_user.id in ADMIN:
+        keyboard = [[InlineKeyboardButton("Posta un annuncio", url = 'https://t.me/aospitaliashopbot')]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        context.bot.send_message(MARKET, f"Benvenuti nel nuovo canale mercatino! 📦\n\nPer postare un annuncio usate il nuovo bot @aospitaliashopbot", reply_markup=reply_markup)
+    else:
+        pass
+
 
 def main() -> None:
     """Run the bot."""
@@ -227,6 +266,7 @@ def main() -> None:
     dispatcher.add_handler(CallbackQueryHandler(delete, pattern='delete'))
 
     dispatcher.add_handler(CommandHandler('start', start))
+    dispatcher.add_handler(CommandHandler('demo', demo))
     dispatcher.add_handler(CommandHandler('blacklist', blacklist ,pass_args=True))
     dispatcher.add_handler(CommandHandler('whitelist', whitelist ,pass_args=True))
 
