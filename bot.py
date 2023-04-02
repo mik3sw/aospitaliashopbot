@@ -19,10 +19,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 from telegram.ext import CallbackContext, CallbackQueryHandler
 from telegram.constants import ParseMode
 import database as db
-
-TOKEN = "5624955819:AAEvyr6uYCeWt3h2PAq6t3Lqi9e5s64MPCM"
-MARKET = -1001804385883
-ADMIN = [38201859, ]
+import os
+import config
 
 # Enable logging
 logging.basicConfig(
@@ -31,28 +29,8 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-GENDER, PHOTO, LOCATION, BIO = range(4)
-POST, NAME, DESCRIPTION, PHOTO, PRICE, PAYMENTS, SHIPMENTS, CONTACTS = range(8) 
-
-
-'''
-def newpostold(update: Update, context: CallbackContext) -> int:
-    """Starts the conversation."""
-    reply_keyboard = [['#vendo', '#cerco']]
-    try:
-        db.add_post(update.message.from_user.id)
-    except:
-        pass
-
-    update.message.reply_text(
-        'Stai pubblicando un annuncio di vendita o cerchi qualcosa?',
-        reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, input_field_placeholder='#vendo o #cerco?'
-        ),
-    )
-
-    return POST
-'''
+# set variables for dict
+NAME, DESCRIPTION, PHOTO, PRICE, PAYMENTS, SHIPMENTS, CONTACTS = range(7)
 
 
 async def newpost(update: Update, context: CallbackContext) -> int:
@@ -178,7 +156,7 @@ async def shipments(update: Update, context: CallbackContext) -> int:
 
     keyboard = [[InlineKeyboardButton("Elimina", callback_data='delete')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await context.bot.send_photo(MARKET, open(f"images/{update.message.from_user.id}.jpg", "rb"),
+    await context.bot.send_photo(config.MARKET, open(f"images/{update.message.from_user.id}.jpg", "rb"),
                                  caption=text1, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
     #38201859
     return ConversationHandler.END
@@ -216,7 +194,7 @@ async def contacts(update: Update, context: CallbackContext) -> int:
 
     keyboard = [[InlineKeyboardButton("Elimina", callback_data='delete')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await context.bot.send_photo(MARKET, open(f"images/{update.message.from_user.id}.jpg", "rb"),
+    await context.bot.send_photo(config.MARKET, open(f"images/{update.message.from_user.id}.jpg", "rb"),
                                  caption=text1, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
 
     return ConversationHandler.END
@@ -231,10 +209,10 @@ async def delete(update,context):
     if query.data == 'delete':
         target_id = int(caption.partition('\n')[0])
         print(target_id)
-        if (target_id == query.from_user.id) or (query.from_user.id in ADMIN):
+        if (target_id == query.from_user.id) or (query.from_user.id in config.ADMIN):
 
             query = update.callback_query
-            await context.bot.delete_message(MARKET, query.message.message_id)
+            await context.bot.delete_message(config.MARKET, query.message.message_id)
 
 
 async def cancel(update: Update, context: CallbackContext) -> int:
@@ -270,19 +248,38 @@ async def start(update, context):
 
 
 async def demo(update, context):
-    if update.message.from_user.id in ADMIN:
+    if update.message.from_user.id in config.ADMIN:
         keyboard = [[InlineKeyboardButton("Posta un annuncio", url = 'https://t.me/aospitaliashopbot')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await context.bot.send_message(MARKET, f"Benvenuti nel nuovo canale mercatino! 📦\n\n"
+        await context.bot.send_message(config.MARKET, f"Benvenuti nel nuovo canale mercatino! 📦\n\n"
                                                f"Per postare un annuncio usate il nuovo bot @aospitaliashopbot",
                                        reply_markup=reply_markup)
     else:
         pass
 
 
+async def clean(update, context):
+    user_id = update.effective_user.id
+    if user_id not in config.ADMIN:
+        logger.warning("Unauthorized access denied for {}.".format(user_id))
+        await context.bot.send_message(update.message.chat_id, f"Non sei autorizzato ed eseguire il comando")
+    else:
+        dir_name = "./images/"
+        img_list = os.listdir(dir_name)
+
+        cnt = 0
+        for item in img_list:
+            if item.endswith(".jpg"):
+                os.remove(os.path.join(dir_name, item))
+                cnt += 1
+
+        await context.bot.send_message(update.message.chat_id, f"{cnt} immagini correttamente eliminate")
+
+
+
 def main() -> None:
     # initialize bot
-    application = ApplicationBuilder().token(TOKEN).build()
+    application = ApplicationBuilder().token(config.TOKEN).build()
 
     # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
     conv_handler = ConversationHandler(entry_points=[CommandHandler('newpost', newpost)],
@@ -301,6 +298,7 @@ def main() -> None:
     application.add_handler(CommandHandler('demo', demo))
     application.add_handler(CommandHandler('blacklist', blacklist))
     application.add_handler(CommandHandler('whitelist', whitelist))
+    application.add_handler(CommandHandler('clean', clean))
 
     application.add_handler(conv_handler)
 

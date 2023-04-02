@@ -1,0 +1,3 @@
+TOKEN = "put-token-here"
+MARKET = -123456789
+ADMIN = [1111111111, 222222222]
