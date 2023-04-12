@@ -14,6 +14,7 @@ bot.
 """
 
 import logging
+from rich.logging import RichHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ConversationHandler
 from telegram.ext import CallbackContext, CallbackQueryHandler
@@ -23,14 +24,15 @@ import os
 import config
 
 # Enable logging
+FORMAT = "%(message)s"
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+    level=logging.INFO, format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("rich")
 
 # set variables for dict
-NAME, DESCRIPTION, PHOTO, PRICE, PAYMENTS, SHIPMENTS, CONTACTS = range(7)
+NAME, DESCRIPTION, PHOTO, PRICE, PAYMENTS, SHIPMENTS = range(6)
 
 
 async def newpost(update: Update, context: CallbackContext) -> int:
@@ -121,7 +123,7 @@ async def shipments(update: Update, context: CallbackContext) -> int:
     db.add_post_partial(update.message.from_user.id, "shipment", update.message.text)
     new = update.message.from_user
     try:
-        if new.username == None:
+        if new.username is None:
             name = "<a href=\"tg://user?id={}\">{}</a>".format(new.id, new.first_name)
         else:
             name = "@"+new.username
@@ -144,12 +146,12 @@ async def shipments(update: Update, context: CallbackContext) -> int:
 
     await update.message.reply_text(f"<b>Congratulazioni!</b> 🎉 \n"
                                     f"Il tuo annuncio è stato postato "
-                                    f"correttamente nel canale @aospitaliashop.\n\n"
+                                    f"correttamente nel topic 'Mercatino' del gruppo @googlepixelit.\n\n"
                                     f"Ricorda che una volta venduto l'articolo "
                                     f"o se vuoi semplicemente cancellare o rifare "
                                     f"l'annuncio è presente un bottone 'Elimina' "
                                     f"che puoi usare solo tu.\n"
-                                    f"Per cercare i tuoi annunci all'interno del canale "
+                                    f"Per cercare i tuoi annunci all'interno del topic 'Mercatino' "
                                     f"usa la funzione di ricerca di Telegram e inserisci come campo "
                                     f"il tuo user_id: <code>{update.message.from_user.id}</code>\n\nGrazie.",
                                     reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.HTML)
@@ -157,45 +159,8 @@ async def shipments(update: Update, context: CallbackContext) -> int:
     keyboard = [[InlineKeyboardButton("Elimina", callback_data='delete')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await context.bot.send_photo(config.MARKET, open(f"images/{update.message.from_user.id}.jpg", "rb"),
-                                 caption=text1, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
-    #38201859
-    return ConversationHandler.END
-
-    #return CONTACTS
-
-
-async def contacts(update: Update, context: CallbackContext) -> int:
-    db.add_post_partial(update.message.from_user.id, "contacts", update.message.text)
-    info = db.getpost(update.message.from_user.id)
-
-    text1 = f"""
-<code>{info['tg_id']}</code>
-#vendo
-📦 <b>{info['name']}</b>
-
-<i>{info['description']}</i>
-
-💰 <b>Prezzo:</b> {info['price']}€
-💳 <b>Pagamenti</b>: {info['payments']}
-🚚 <b>Spedizione</b>: {info['shipment']}
-
-👤 <b>Contatti</b>: {info['contacts']}"""
-
-    await update.message.reply_text(f"<b>Congratulazioni!</b> 🎉 \n"
-                                    f"Il tuo annuncio è stato postato correttamente "
-                                    f"nel canale @aospitaliashop.\n\n"
-                                    f"Ricorda che una volta venduto l'articolo "
-                                    f"o se vuoi semplicemente cancellare o rifare "
-                                    f"l'annuncio è presente un bottone 'Elimina' che puoi usare solo tu.\n"
-                                    f"Per cercare i tuoi annunci all'interno del canale "
-                                    f"usa la funzione di ricerca di Telegram e inserisci come campo "
-                                    f"il tuo user_id: <code>{update.message.from_user.id}</code>\n\nGrazie.",
-                                    reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.HTML)
-
-    keyboard = [[InlineKeyboardButton("Elimina", callback_data='delete')]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await context.bot.send_photo(config.MARKET, open(f"images/{update.message.from_user.id}.jpg", "rb"),
-                                 caption=text1, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+                                 caption=text1, reply_markup=reply_markup, parse_mode=ParseMode.HTML,
+                                 message_thread_id=config.TOPIC)
 
     return ConversationHandler.END
 
@@ -251,9 +216,9 @@ async def demo(update, context):
     if update.message.from_user.id in config.ADMIN:
         keyboard = [[InlineKeyboardButton("Posta un annuncio", url = 'https://t.me/aospitaliashopbot')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await context.bot.send_message(config.MARKET, f"Benvenuti nel nuovo canale mercatino! 📦\n\n"
+        await context.bot.send_message(config.MARKET, f"Benvenuti nel topic mercatino! 📦\n\n"
                                                f"Per postare un annuncio usate il nuovo bot @aospitaliashopbot",
-                                       reply_markup=reply_markup)
+                                       reply_markup=reply_markup, message_thread_id=config.TOPIC)
     else:
         pass
 
@@ -281,7 +246,7 @@ def main() -> None:
     # initialize bot
     application = ApplicationBuilder().token(config.TOKEN).build()
 
-    # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
+    # Add conversation handler with the states NAME, DESCRIPTION, PHOTO, PRICE, PAYMENTS, SHIPMENTS
     conv_handler = ConversationHandler(entry_points=[CommandHandler('newpost', newpost)],
                                        states={
                                            NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, name)],
@@ -289,8 +254,7 @@ def main() -> None:
                                            PHOTO: [MessageHandler(filters.PHOTO, photo)],
                                            PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, price)],
                                            PAYMENTS: [MessageHandler(filters.TEXT & ~filters.COMMAND, payments)],
-                                           SHIPMENTS: [MessageHandler(filters.TEXT & ~filters.COMMAND, shipments)],
-                                           CONTACTS: [MessageHandler(filters.TEXT & ~filters.COMMAND, contacts)]},
+                                           SHIPMENTS: [MessageHandler(filters.TEXT & ~filters.COMMAND, shipments)]},
                                        fallbacks=[CommandHandler('cancel', cancel)])
 
     application.add_handler(CallbackQueryHandler(delete, pattern='delete'))
